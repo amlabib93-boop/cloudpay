@@ -1,0 +1,419 @@
+version: '3.9'
+
+networks:
+  cloudpay-network:
+    driver: bridge
+
+volumes:
+  postgres_wallet_data:
+  postgres_transfer_data:
+  postgres_remittance_data:
+  redis_data:
+  mongo_data:
+
+services:
+
+  # ─── Infrastructure ────────────────────────────────────────────────
+
+  postgres-wallet:
+    image: postgres:16-alpine
+    container_name: cloudpay-postgres-wallet
+    environment:
+      POSTGRES_DB: wallet_db
+      POSTGRES_USER: cloudpay
+      POSTGRES_PASSWORD: cloudpay_local
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_wallet_data:/var/lib/postgresql/data
+    networks:
+      - cloudpay-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cloudpay -d wallet_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-transfer:
+    image: postgres:16-alpine
+    container_name: cloudpay-postgres-transfer
+    environment:
+      POSTGRES_DB: transfer_db
+      POSTGRES_USER: cloudpay
+      POSTGRES_PASSWORD: cloudpay_local
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_transfer_data:/var/lib/postgresql/data
+    networks:
+      - cloudpay-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cloudpay -d transfer_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-remittance:
+    image: postgres:16-alpine
+    container_name: cloudpay-postgres-remittance
+    environment:
+      POSTGRES_DB: remittance_db
+      POSTGRES_USER: cloudpay
+      POSTGRES_PASSWORD: cloudpay_local
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_remittance_data:/var/lib/postgresql/data
+    networks:
+      - cloudpay-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cloudpay -d remittance_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: cloudpay-redis
+    command: redis-server --requirepass cloudpay_local
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - cloudpay-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "cloudpay_local", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:7.0
+    container_name: cloudpay-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: cloudpay
+      MONGO_INITDB_ROOT_PASSWORD: cloudpay_local
+      MONGO_INITDB_DATABASE: cloudpay_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - cloudpay-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: cloudpay-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - cloudpay-network
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: cloudpay-kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    networks:
+      - cloudpay-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.6.1
+    container_name: cloudpay-schema-registry
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:29092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+    networks:
+      - cloudpay-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/subjects || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: cloudpay-kafka-ui
+    depends_on:
+      - kafka
+      - schema-registry
+    ports:
+      - "9090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: cloudpay-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
+    networks:
+      - cloudpay-network
+
+  # ─── Observability ────────────────────────────────────────────────
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: cloudpay-prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - cloudpay-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=7d'
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: cloudpay-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: cloudpay_local
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - cloudpay-network
+    depends_on:
+      - prometheus
+
+  # ─── Services ────────────────────────────────────────────────────
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: cloudpay-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PASSWORD: cloudpay_local
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - cloudpay-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  wallet-service:
+    build:
+      context: ./wallet-service
+      dockerfile: Dockerfile
+    container_name: cloudpay-wallet-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-wallet:5432/wallet_db
+      SPRING_DATASOURCE_USERNAME: cloudpay
+      SPRING_DATASOURCE_PASSWORD: cloudpay_local
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PASSWORD: cloudpay_local
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
+    depends_on:
+      postgres-wallet:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cloudpay-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  transfer-service:
+    build:
+      context: ./transfer-service
+      dockerfile: Dockerfile
+    container_name: cloudpay-transfer-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-transfer:5432/transfer_db
+      SPRING_DATASOURCE_USERNAME: cloudpay
+      SPRING_DATASOURCE_PASSWORD: cloudpay_local
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PASSWORD: cloudpay_local
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
+    depends_on:
+      postgres-transfer:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cloudpay-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  fraud-service:
+    build:
+      context: ./fraud-service
+      dockerfile: Dockerfile
+    container_name: cloudpay-fraud-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PASSWORD: cloudpay_local
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cloudpay-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: cloudpay-notification-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_MONGODB_URI: mongodb://cloudpay:cloudpay_local@mongodb:27017/cloudpay_db?authSource=admin
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    networks:
+      - cloudpay-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  remittance-service:
+    build:
+      context: ./remittance-service
+      dockerfile: Dockerfile
+    container_name: cloudpay-remittance-service
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-remittance:5432/remittance_db
+      SPRING_DATASOURCE_USERNAME: cloudpay
+      SPRING_DATASOURCE_PASSWORD: cloudpay_local
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PASSWORD: cloudpay_local
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
+    depends_on:
+      postgres-remittance:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cloudpay-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  crypto-service:
+    build:
+      context: ./crypto-service
+      dockerfile: Dockerfile
+    container_name: cloudpay-crypto-service
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATA_MONGODB_URI: mongodb://cloudpay:cloudpay_local@mongodb:27017/cloudpay_db?authSource=admin
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PASSWORD: cloudpay_local
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cloudpay-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s

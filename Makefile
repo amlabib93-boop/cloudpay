@@ -3,7 +3,7 @@ export
 
 .DEFAULT_GOAL := help
 
-.PHONY: dev-up dev-down dev-logs dev-ps dev-psql dev-reset help
+.PHONY: dev-up dev-down dev-logs dev-ps dev-psql dev-reset hooks-install hooks-uninstall format format-check style-check help
 
 dev-up: ## Start infrastructure containers
 	docker compose up -d
@@ -24,6 +24,24 @@ dev-reset: ## Stop containers and destroy volumes (data loss!)
 	@echo "This will destroy all local data volumes. Press Ctrl+C to abort."
 	@read -p "Continue? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
 	docker compose down -v
+
+hooks-install: ## Install git hooks (run once per clone)
+	git config core.hooksPath .githooks
+	chmod +x .githooks/pre-commit
+	@echo "Git hooks installed. Pre-commit will run Spotless + Checkstyle on every commit."
+
+hooks-uninstall: ## Remove git hooks
+	git config --unset core.hooksPath
+	@echo "Git hooks uninstalled. Default .git/hooks/ is back in use."
+
+format: ## Auto-apply Spotless formatting to all Java files
+	./mvnw spotless:apply
+
+format-check: ## Check Spotless formatting without modifying
+	./mvnw spotless:check
+
+style-check: ## Run Checkstyle without modifying
+	./mvnw checkstyle:check
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+STAGED_JAVA_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.java$' || true)
+
+if [[ -z "${STAGED_JAVA_FILES}" ]]; then
+    exit 0
+fi
+
+if ! command -v ./mvnw &> /dev/null; then
+    echo "ERROR: Maven wrapper (./mvnw) not found at repo root." >&2
+    exit 1
+fi
+
+if ! ./mvnw spotless:check -q; then
+    echo "Spotless found formatting violations. Run './mvnw spotless:apply' to fix." >&2
+    exit 1
+fi
+
+if ! ./mvnw checkstyle:check -q; then
+    echo "Checkstyle violations found. See target/checkstyle-result.xml for details." >&2
+    exit 1
+fi

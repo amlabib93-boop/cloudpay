@@ -6,7 +6,7 @@
 
 ## 1. What this project is
 
-CloudPay is a cloud-native digital wallet and money transfer platform built as a portfolio project to demonstrate Senior Backend Engineer competence for EU fintech relocation roles (Wise, Revolut, Zalando, Agoda, Booking, Mollie, Adyen tier).
+CloudPay is a cloud-native digital wallet and money transfer platform built as a portfolio project to demonstrate Senior Backend Engineer competence for EU fintech roles (Wise, Revolut, Zalando, Agoda, Booking, Mollie, Adyen tier).
 
 **The audience for this code is a Senior/Staff interviewer at an EU fintech.** Every architectural choice should hold up to "why did you do it this way" under interview pressure. Cargo-culting is worse than simplicity.
 

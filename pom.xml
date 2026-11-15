@@ -20,13 +20,9 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!-- BOM versions -->
-        <spring-boot.version>4.0.6-SNAPSHOT</spring-boot.version>
-        <testcontainers.version>1.21.3</testcontainers.version>
-
-        <!-- Dependency versions -->
-        <liquibase.version>4.32.0</liquibase.version>
-        <assertj.version>3.27.3</assertj.version>
+        <!-- BOM versions. Spring Boot BOM also manages Testcontainers, Liquibase and AssertJ;
+             do not override those here. -->
+        <spring-boot.version>4.1.2</spring-boot.version>
 
         <!-- Plugin versions -->
         <jacoco.version>0.8.13</jacoco.version>
@@ -47,23 +43,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>testcontainers-bom</artifactId>
-                <version>${testcontainers.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.liquibase</groupId>
-                <artifactId>liquibase-core</artifactId>
-                <version>${liquibase.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.assertj</groupId>
-                <artifactId>assertj-core</artifactId>
-                <version>${assertj.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -75,11 +54,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -264,23 +238,4 @@
             <!-- Quality gates skipped; JaCoCo agent still attaches from base build -->
         </profile>
     </profiles>
-
-    <repositories>
-        <repository>
-            <id>spring-snapshots</id>
-            <name>Spring Snapshots</name>
-            <url>https://repo.spring.io/snapshot</url>
-            <snapshots><enabled>true</enabled></snapshots>
-            <releases><enabled>false</enabled></releases>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>spring-snapshots</id>
-            <name>Spring Snapshots</name>
-            <url>https://repo.spring.io/snapshot</url>
-            <snapshots><enabled>true</enabled></snapshots>
-            <releases><enabled>false</enabled></releases>
-        </pluginRepository>
-    </pluginRepositories>
 </project>

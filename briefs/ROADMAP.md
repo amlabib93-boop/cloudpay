@@ -1,7 +1,7 @@
 # CloudPay roadmap — build order and service dependencies
 
 > The master map for development order. Each service's own `CLAUDE.md` says *how* to work on it; this file says *when* and *what it waits on*.
-> Phase numbers (P1-P14) follow the master working guide v2. Started 2026-05-17.
+> Phase numbers P1-P14 are the project's phase plan (order fixed, dates flexible). Started 2026-05-17.
 
 ---
 
@@ -36,9 +36,14 @@ graph LR
     W --> C
     T --> R
     OBS --> P
+    GW -. failed-login events .-> F
+    W -. KYC requests .-> F
+    F -. KYC results .-> W
 ```
 
 `F --> T` is real: once fraud exists, the transfer saga waits on its decision. Transfer is built first (P4) with the fraud step left out; P5 adds it.
+
+Dotted edges are P5 event flows between services that already exist by then; they don't change the build order, but their topics and schemas belong to G5.
 
 ---
 
@@ -47,7 +52,7 @@ graph LR
 | # | Work | Phase | Waits on (must be on `master`) | Contract gate (agree in thinking chat first) |
 |---|---|---|---|---|
 | 0 | Phase 1 leftovers: AWS seed, `v0.1.0-skeleton` tag | P1 | — | — |
-| 1 | `shared-lib`: `Money` | P2 | — | **G1** currency representation (fiat + crypto) |
+| 1 | `shared-lib`: `Money` | P2 | — | **G1** currency representation (fiat, crypto, gold XAU) |
 | 2 | `wallet-service`: domain, Liquibase, `@Version`, light CQRS | P2 | #1 for domain code (skeleton can start earlier) | — |
 | 3 | `wallet-service`: idempotency keys on credit/debit, Redis cache, query/index tuning with before/after numbers | P2 end | #2 | **G2** idempotency-key semantics (header, TTL, replay response) |
 | 4 | `api-gateway`: routing, JWT validation, rate limiting, login lockout, device binding, step-up auth | P3 | #2 (needs a route target) | **G3** JWT claims, user id → `ownerId`; auth server inside gateway or separate |
@@ -56,6 +61,7 @@ graph LR
 | 7 | `fraud-service`: consumer, velocity + blacklist checks, async KYC checks (request/result/error topics) | P5 | #6 | **G6** how the fraud decision reaches the saga (event vs sync call) |
 | 7b | `notification-service` (Quarkus): consumer, hash-chained audit log, async receipts, external accounting sync | P5 | #6 | — (consumes G5 events) |
 | 7c | `transfer-service`: reconciliation job (transfers vs wallet ledger), daily summary report | P5 | #6 | — |
+| 7d | `wallet-service`: KYC onboarding (wallet starts `PENDING_KYC`, becomes `ACTIVE` on a KYC-approved event) | P5 | #7 (KYC topics live) | — (KYC topics and schemas are part of G5) |
 | 8 | AWS EKS, Terraform, Argo CD, CI/CD | P6 | #2-#7 have Dockerfiles | — |
 | 9 | Observability: traces, metrics, SLOs, load tests (spike + soak) with before/after numbers | P7 | #8 | — |
 | 10 | Service mesh: Istio, canary, chaos | P8 | #8, #9 | — |
@@ -101,6 +107,7 @@ These are inconsistencies across the docs. Each is also listed in the service fi
 | 6 | `Money` currency type: `java.util.Currency` can't represent crypto (gold XAU also needed) | shared-lib, crypto | G1 (P2) |
 | 7 | Root pom forces Spring Boot BOM + `spring-boot-starter` on every module; `notification-service` is Quarkus | notification, root pom | Before P5 skeleton |
 | 8 | RAG chat / compliance reports planned with Spring AI, but `notification-service` is Quarkus | notification | Before P11: Quarkus LangChain4j or move AI to a Spring service |
+| 9 | External accounting sync (R20) sits in `notification-service`, which is about notifying users, not integrating ledgers | notification, transfer | Before P5: keep it there with a reason in the Quarkus ADR, or move it to `transfer-service` next to reconciliation |
 
 ---
 

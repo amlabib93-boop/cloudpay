@@ -2,7 +2,7 @@
 
 > Module-level instructions. The root `CLAUDE.md` still applies in full; this file narrows scope for sessions working on `wallet-service`. If the two conflict, the root file wins — surface the conflict.
 
-**Status:** active. **Phase:** P2 (roadmap #2, #3). **Waits on:** `shared-lib` `Money` for domain code only — skeleton, Liquibase and context-load test can start now.
+**Status:** active. **Phase:** P2 (roadmap #2, #3); KYC onboarding in P5 (roadmap #7d). **Waits on:** `shared-lib` `Money` for domain code only — skeleton, Liquibase and context-load test can start now.
 
 ---
 
@@ -52,7 +52,7 @@ Not in this phase: auth/JWT (P3), Kafka/outbox (P5), Resilience4j (P4), Spring A
 
 - **R12 / R17 (P2):** Redis read cache and index work driven by `EXPLAIN ANALYZE`; record before/after numbers in `docs/performance/`.
 - **R16:** the optimistic-lock contention test is the concurrency story.
-- **R7 onboarding (P5, not now):** a wallet starts `PENDING_KYC` and becomes `ACTIVE` on a KYC-approved event from `fraud-service`.
+- **R7 onboarding (P5, not now):** a wallet starts `PENDING_KYC` and becomes `ACTIVE` on a KYC-approved event from `fraud-service`. Roadmap row #7d.
 - **R14 (P5):** reconciliation needs a ledger row per credit/debit. Agree its shape in G4 before transfer starts.
 
 ---

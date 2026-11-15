@@ -1,3 +1,7 @@
+# One project name for every checkout (main repo and worktrees), so they all
+# manage the same containers and volumes instead of clashing on container_name.
+name: cloudpay
+
 networks:
   cloudpay-network:
     driver: bridge

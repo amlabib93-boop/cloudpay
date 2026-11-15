@@ -69,6 +69,7 @@ First increment when the phase starts: resolve roadmap conflict #7 (parent pom),
 - **pgvector for RAG (P11).** The older architecture adds pgvector, a third datastore. Alternatives: MongoDB Atlas Vector Search (not available in local MongoDB 7 community), a Redis vector index, or pgvector in a dedicated Postgres. Decide in P11, not before.
 - **Parent pom vs Quarkus (roadmap conflict #7).** The root pom imports the Spring Boot BOM and adds `spring-boot-starter` to every module. This module must not inherit those: give it its own parent or move the Spring deps out of the root pom's shared `<dependencies>`. Decide before the skeleton.
 - **Spring AI on a Quarkus service (roadmap conflict #8).** RAG chat and compliance reports were planned with Spring AI, which needs Spring. Options: Quarkus LangChain4j in this service, or move the AI features to a Spring service. Decide before P11.
+- **External accounting sync placement (roadmap conflict #9).** R20 pushes completed transfers to an external accounting system. That is ledger integration, not user notification. Keep it here with a reason in the Quarkus ADR, or move it to `transfer-service` next to reconciliation. Decide before P5.
 
 ---
 

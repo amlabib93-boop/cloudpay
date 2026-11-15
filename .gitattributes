@@ -1,0 +1,13 @@
+# Normalize line endings: LF in the repo and on checkout, so shell scripts,
+# mvnw and the pre-commit hook run in Git Bash and Docker, and Spotless sees
+# one line ending everywhere.
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binaries
+*.jar binary
+*.png binary
+*.jpg binary

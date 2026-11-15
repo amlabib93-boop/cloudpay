@@ -9,7 +9,7 @@ Until P5 starts, this folder holds only this file. No `pom.xml`, no entry in roo
 
 ## 1. Starting a session here
 
-1. Read, in order: root `CLAUDE.md` → this file → `docs/ai-workflow.md` → `docs/interview/fraud-service.md` (if it exists) → `briefs/ROADMAP.md` (rows #7, #13).
+1. Read, in order: root `CLAUDE.md` → this file → `docs/ai-workflow.md` → `docs/interview/fraud-service.md` (if it exists) → `briefs/ROADMAP.md` (rows #7, #7d, #13).
 2. Check the gate: is the phase started and is everything under "waits on" on `master`? If not, stop and tell Ahmed.
 3. Need a brief from the thinking chat. If none was pasted, ask for it. Don't invent scope from this file.
 4. Scope: `fraud-service/` only. Branch: `feat/fraud-<short-name>` off `master`.

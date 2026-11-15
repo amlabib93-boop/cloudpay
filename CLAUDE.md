@@ -188,6 +188,7 @@ This project is built with Claude Code as the primary coding tool. The expectati
 - **Multi-file changes**: list the files you intend to touch *before* touching them. Wait for confirmation on changes that span more than 3 files.
 - **Test coverage**: every new public method in a service or controller gets a test in the same PR. No exceptions.
 - **After completing a task**: run `./mvnw verify` in the affected module. Paste the result. Flag any deviation from the rules above.
+- **Working loop**: code in small reviewable increments, then stop with a review package and learning notes. Follow `docs/ai-workflow.md` exactly.
 
 ---
 

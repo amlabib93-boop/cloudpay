@@ -8,7 +8,7 @@
 ## 1. Session layout
 
 - **One session per service**, each in its own git worktree, on its own branch (`feat/<service>-<short-name>`).
-- Each session reads: root `CLAUDE.md` → `<module>/CLAUDE.md` → this file → `docs/interview/<service>.md` (if it exists).
+- Each session reads: root `CLAUDE.md` → `<module>/CLAUDE.md` → this file → `docs/interview/<service>.md` (if it exists) → the service's rows in `local/resume-map.md` (local only; copied into worktrees via `.worktreeinclude`).
 - A session edits only its own module. Cross-module changes are separate PRs (see the module `CLAUDE.md`).
 - To start a session: open the service's `<module>/CLAUDE.md` — its "Starting a session here" section is the checklist. Build order and dependencies: `briefs/ROADMAP.md`.
 
@@ -38,7 +38,7 @@ Use exactly these headings, in this order. Keep each section tight.
 
 **How it fails** — what breaks under concurrency, bad input, DB/network failure, or at scale, and what in the code handles it (or doesn't yet).
 
-**Interview angle** — 2-3 questions a Senior interviewer at Wise/Revolut/Adyen would ask about this code, each with a short model answer (3-5 lines). Include at least one follow-up "what if…" probe.
+**Interview angle** — 2-3 questions a Senior/Staff backend interviewer would ask about this code, each with a short model answer (3-5 lines). Include at least one follow-up "what if…" probe.
 
 **Go deeper** — one concept worth studying properly, with where to read (the phase's Educative topic, Spring/Hibernate reference docs, a JEP). Optionally one **exercise** Ahmed can do himself in ≤ 30 min (e.g. "write the test for the missing edge case X", "remove `@Version` and run the concurrency test — explain the result"). Optional means optional: skip it on a busy week.
 

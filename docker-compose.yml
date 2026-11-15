@@ -147,7 +147,7 @@ services:
   #   networks:
   #     - cloudpay-network
 
-  # ENABLE IN: Phase 10 — crypto + notification
+  # ENABLE IN: Phase 5 — notification (crypto uses it from Phase 10)
   # mongodb:
   #   image: mongo:7.0
   #   container_name: cloudpay-mongodb
@@ -219,7 +219,7 @@ services:
 
   # ─── Application Services ───────────────────────────────────────
 
-  # ENABLE IN: Phase 2 — api-gateway (requires Dockerfile)
+  # ENABLE IN: Phase 3 — api-gateway (requires Dockerfile)
   # api-gateway:
   #   build:
   #     context: ./api-gateway
@@ -296,7 +296,7 @@ services:
   #     retries: 5
   #     start_period: 60s
 
-  # ENABLE IN: Phase 6 — fraud-service (requires Dockerfile)
+  # ENABLE IN: Phase 5 — fraud-service (requires Dockerfile)
   # fraud-service:
   #   build:
   #     context: ./fraud-service
@@ -323,18 +323,18 @@ services:
   #     retries: 5
   #     start_period: 60s
 
-  # ENABLE IN: Phase 6 — notification-service (requires Dockerfile)
+  # ENABLE IN: Phase 5 — notification-service, Quarkus (requires Dockerfile.jvm)
   # notification-service:
   #   build:
   #     context: ./notification-service
-  #     dockerfile: Dockerfile
+  #     dockerfile: src/main/docker/Dockerfile.jvm
   #   container_name: cloudpay-notification-service
   #   ports:
   #     - "8084:8084"
   #   environment:
-  #     SPRING_PROFILES_ACTIVE: local
-  #     SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-  #     SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/cloudpay_db?authSource=admin
+  #     QUARKUS_PROFILE: local
+  #     KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+  #     QUARKUS_MONGODB_CONNECTION_STRING: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/cloudpay_db?authSource=admin
   #   depends_on:
   #     kafka:
   #       condition: service_healthy
@@ -343,7 +343,7 @@ services:
   #   networks:
   #     - cloudpay-network
   #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+  #     test: ["CMD", "curl", "-f", "http://localhost:8084/q/health"]
   #     interval: 30s
   #     timeout: 10s
   #     retries: 5

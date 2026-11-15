@@ -48,6 +48,13 @@
 
 Not in this phase: auth/JWT (P3), Kafka/outbox (P5), Resilience4j (P4), Spring AI (P11+), AWS SDK (P6+).
 
+### Resume-linked features (see `local/resume-map.md`, local only)
+
+- **R12 / R17 (P2):** Redis read cache and index work driven by `EXPLAIN ANALYZE`; record before/after numbers in `docs/performance/`.
+- **R16:** the optimistic-lock contention test is the concurrency story.
+- **R7 onboarding (P5, not now):** a wallet starts `PENDING_KYC` and becomes `ACTIVE` on a KYC-approved event from `fraud-service`.
+- **R14 (P5):** reconciliation needs a ledger row per credit/debit. Agree its shape in G4 before transfer starts.
+
 ---
 
 ## 4. Domain rules specific to wallets

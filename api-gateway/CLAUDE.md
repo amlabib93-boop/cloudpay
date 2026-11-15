@@ -37,6 +37,13 @@ First increment when the phase starts: module skeleton — `pom.xml`, add to roo
 - Rate limiting: Redis token bucket, per user (and per IP for unauthenticated routes).
 - No business logic. The gateway never reads or writes money.
 
+### Resume-linked features (see `local/resume-map.md`, local only)
+
+- **R4 login protection:** failed-attempt counter in Redis, lockout with a TTL after N failures, trusted-device list per user, step-up verification (OTP stub) for a new device or a large transfer. Lives in the auth server if that ends up separate from the gateway.
+- **R11 stateless auth:** JWT validation, user id claim → `ownerId`; ADR covers sessions vs JWT, revocation and key rotation.
+- **R17 traffic spikes:** rate limits proven with a spike load test in P7.
+- **R10 strangler fig (P8/P12):** the gateway is the facade that shifts traffic from an old route to an extracted service.
+
 ---
 
 ## 4. Out of scope / premature

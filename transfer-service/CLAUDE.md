@@ -39,6 +39,13 @@ First increment when the phase starts: module skeleton — `pom.xml`, add to roo
 - Idempotent API: a client retry with the same idempotency key never creates a second transfer.
 - Resilience4j around calls to `wallet-service`: timeouts, retry only on idempotent calls, circuit breaker.
 
+### Resume-linked features (see `local/resume-map.md`, local only)
+
+- **R14 reconciliation (P5):** a job compares completed transfers with wallet ledger entries and reports mismatches. It never auto-fixes money.
+- **R21 reporting (P5):** daily transaction summary (volumes and totals per currency) built from the ledger.
+- **R15 failure handling:** retries with backoff only on idempotent calls, timeouts, circuit breaker; failure rate measured with fault injection in P8.
+- **R12:** batch inserts where volume is real (reconciliation results, outbox relay).
+
 ---
 
 ## 4. Out of scope / premature

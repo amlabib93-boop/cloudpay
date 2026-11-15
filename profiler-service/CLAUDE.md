@@ -36,6 +36,10 @@ First increment when the phase starts: module skeleton — `pom.xml`, add to roo
 - Spring AI analysis of recordings: summarise hot paths, allocation pressure, lock contention, GC behaviour, and suggest where to look.
 - It's a JVM-profiling assistant for engineers, not part of the money path.
 
+### Resume-linked features (see `local/resume-map.md`, local only)
+
+- **R13 memory/GC investigation:** reproduce a memory leak under a soak test, find it with JFR and a heap dump (Eclipse MAT), fix it, tune GC, and write up the before/after in `docs/performance/`.
+
 ---
 
 ## 4. Out of scope / premature

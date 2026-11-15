@@ -1,6 +1,6 @@
 # CloudPay
 
-Cloud-native digital wallet and money transfer platform — 8 Spring Boot 4 microservices deployed on AWS EKS.
+Cloud-native digital wallet and money transfer platform — 8 Java 21 microservices (Spring Boot 4, one on Quarkus) deployed on AWS EKS.
 
 Built as a portfolio project demonstrating Senior Backend Engineer competence in fintech: distributed transactions, event-driven architecture, fraud detection with Spring AI, and production-grade observability.
 
@@ -10,13 +10,13 @@ Built as a portfolio project demonstrating Senior Backend Engineer competence in
 
 | Service | Port | Stack | Responsibility |
 |---|---|---|---|
-| `api-gateway` | 8080 | Spring Cloud Gateway, Redis | OAuth2, JWT, rate limiting, routing |
+| `api-gateway` | 8080 | Spring Cloud Gateway, Redis | OAuth2, JWT, rate limiting, routing, login lockout, device binding |
 | `wallet-service` | 8081 | PostgreSQL, Redis | Wallet CRUD, balance management, CQRS |
-| `transfer-service` | 8082 | PostgreSQL, Kafka | Transfer domain, Saga orchestration, Outbox pattern |
-| `fraud-service` | 8083 | DynamoDB, Redis, Spring AI | Fraud detection, anomaly scoring, Kafka consumer |
-| `notification-service` | 8084 | MongoDB, DynamoDB, Spring AI | Notifications, audit log, RAG support chat |
-| `remittance-service` | 8085 | PostgreSQL, Redis | Corridor routing engine, FX rates, provider Strategy |
-| `crypto-service` | 8086 | MongoDB, Redis, Kafka | Crypto buy/sell, quote TTL, SSE price streaming |
+| `transfer-service` | 8082 | PostgreSQL, Kafka | Transfer domain, Saga orchestration, Outbox pattern, reconciliation |
+| `fraud-service` | 8083 | DynamoDB, Redis, Kafka, Spring AI | Fraud detection, async KYC checks over Kafka, anomaly scoring |
+| `notification-service` | 8084 | Quarkus, MongoDB, DynamoDB, Spring AI | Notifications, hash-chained audit log, async receipts, RAG support chat |
+| `remittance-service` | 8085 | PostgreSQL, Redis | DB-driven corridor rules, provider registry, FX quotes |
+| `crypto-service` | 8086 | MongoDB, Redis, Kafka | Crypto and digital gold through one provider layer, quote TTL, SSE prices |
 | `profiler-service` | 8087 | Spring AI | JFR profiling, FlameGraphs, AI performance analysis |
 
 ## Tech stack
@@ -67,7 +67,7 @@ All non-trivial architectural choices are documented as ADRs in [`docs/adr/`](do
 
 🚧 **Work in progress** — building incrementally, one service at a time.
 
-See [`PROGRESS.md`](PROGRESS.md) for weekly updates.
+Build order: [`briefs/ROADMAP.md`](briefs/ROADMAP.md).
 
 <!-- ## Screenshots -->
 <!-- Grafana SLO dashboard, Argo CD, FlameGraphs, RAG chat — added in later phases -->

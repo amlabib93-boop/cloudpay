@@ -15,7 +15,7 @@ Until P5 starts, this folder holds only this file. No `pom.xml`, no entry in roo
 4. Scope: `notification-service/` only. Branch: `feat/notification-<short-name>` off `master`.
 5. First reply: restate the task in 3-5 lines, split it into increments (one commit each), list the files for the first increment, wait for "go".
 
-First increment when the phase starts: module skeleton — `pom.xml`, add to root `<modules>` (ask first), `NotificationServiceApplication`, context-load test.
+First increment when the phase starts: resolve roadmap conflict #7 (parent pom), then the Quarkus module skeleton — `pom.xml` with its own Quarkus dependency management, add to root `<modules>` (ask first), a health check and a `@QuarkusTest` smoke test.
 
 ---
 
@@ -26,7 +26,8 @@ First increment when the phase starts: module skeleton — `pom.xml`, add to roo
 | Base package | `com.cloudpay.notification` |
 | Port | 8084 |
 | Datastores | MongoDB 7 (notifications, templates) + DynamoDB (immutable audit log) |
-| Compose | `mongodb` block (27017, db `cloudpay_db`) — currently marked "Phase 10"; needs to move to P5 |
+| Framework | Quarkus 3.x (not Spring Boot): CDI, `quarkus-rest`, SmallRye Reactive Messaging for Kafka, `Dockerfile.jvm` |
+| Compose | `mongodb` block (27017, db `cloudpay_db`) and the Quarkus-style `notification-service` block, both marked Phase 5 |
 | Messaging | Kafka consumer group on transfer (and later wallet/fraud) events |
 
 ---
@@ -36,13 +37,20 @@ First increment when the phase starts: module skeleton — `pom.xml`, add to roo
 - Turn domain events into user notifications (email/push stubs locally).
 - Immutable audit log of every money-relevant event: append-only, never updated or deleted.
 - Idempotent consumption: a replayed event never sends a second notification or writes a second audit entry.
-- P11: RAG support chat over CloudPay docs/FAQ; compliance report generation via Spring AI function calling.
+- P11: RAG support chat over CloudPay docs/FAQ; compliance report generation via LLM function calling (framework per roadmap conflict #8).
+
+### Resume-linked features (see `local/resume-map.md`, local only)
+
+- **R8 tamper-evident audit log:** each entry stores the hash of the previous one (hash chain); a verify job detects edits, deletions and gaps.
+- **R7 async documents:** receipts and monthly statements generated as PDFs from events, off the request path.
+- **R20 external sync:** push completed transfers to a stub external accounting system in near real time from Kafka events, with retries and idempotent delivery.
+- **R18:** this service is the Quarkus one (CDI, SmallRye Reactive Messaging, no Spring compat layer).
 
 ---
 
 ## 4. Out of scope / premature
 
-- Spring AI (RAG, compliance report) — P11.
+- AI features (RAG, compliance report) — P11.
 - SNS / Lambda fallback — AWS, P6+.
 - Real email/SMS providers. Use a logging sender behind an interface until there's a reason.
 
@@ -59,7 +67,8 @@ First increment when the phase starts: module skeleton — `pom.xml`, add to roo
 
 - **DynamoDB in P5 vs AWS in P6+ (§10)** — same question as `fraud-service`; decide once for both.
 - **pgvector for RAG (P11).** The older architecture adds pgvector, a third datastore. Alternatives: MongoDB Atlas Vector Search (not available in local MongoDB 7 community), a Redis vector index, or pgvector in a dedicated Postgres. Decide in P11, not before.
-- MongoDB compose marker says Phase 10 — move to P5 (roadmap conflict #4).
+- **Parent pom vs Quarkus (roadmap conflict #7).** The root pom imports the Spring Boot BOM and adds `spring-boot-starter` to every module. This module must not inherit those: give it its own parent or move the Spring deps out of the root pom's shared `<dependencies>`. Decide before the skeleton.
+- **Spring AI on a Quarkus service (roadmap conflict #8).** RAG chat and compliance reports were planned with Spring AI, which needs Spring. Options: Quarkus LangChain4j in this service, or move the AI features to a Spring service. Decide before P11.
 
 ---
 

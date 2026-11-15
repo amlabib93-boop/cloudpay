@@ -38,6 +38,13 @@ First increment when the phase starts: module skeleton — `pom.xml`, add to roo
 - **Quotes:** a rate is quoted, locked for a short TTL, and honoured if the transfer executes inside it.
 - All FX maths in `BigDecimal` with explicit scale and `HALF_EVEN`. Rates have their own scale (decide it — typically more than 4 decimals); converted amounts are rounded once, at the end.
 
+### Resume-linked features (see `local/resume-map.md`, local only)
+
+- **R1 provider registry + corridor rules:** providers implement one SPI and register themselves; corridor rules (required beneficiary fields and formats such as IBAN / IFSC / routing code, limits, provider priority) live in Liquibase-managed tables. Done when 3+ corridors are added with zero Java changes.
+- **R1 quote direction:** quote by send amount or by receive amount.
+- **R6 provider calls:** explicitly tuned HTTP pool and timeouts; parallel quote requests to all eligible providers on virtual threads, best quote wins.
+- **R19 quote ranking:** rank eligible quotes by price, speed and reliability; Redis cache on the hot path and query tuning on the ranking inputs, with before/after numbers.
+
 ---
 
 ## 4. Out of scope / premature

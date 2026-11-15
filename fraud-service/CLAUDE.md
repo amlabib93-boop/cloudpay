@@ -37,6 +37,12 @@ First increment when the phase starts: module skeleton — `pom.xml`, add to roo
 - Retry topics and a DLQ for poison messages. Consumer is idempotent (same event twice → same decision, no double counting).
 - Every decision is stored with its inputs and reasons — explainability is a compliance requirement, not a nice-to-have.
 
+### Resume-linked features (see `local/resume-map.md`, local only)
+
+- **R2 async KYC checks:** one request / result / error topic set per check type (document, liveness, sanctions — stubs with artificial delay). Every message carries a correlation id; results go to handlers through a registry. The requester never blocks on the vendor.
+- **R3 compatibility:** add a v2 result schema with Avro schema evolution while v1 consumers keep working. ADR on the compatibility mode.
+- **R4 link:** consume failed-login events from the gateway as a fraud signal.
+
 ---
 
 ## 4. Out of scope / premature
@@ -49,8 +55,8 @@ First increment when the phase starts: module skeleton — `pom.xml`, add to roo
 
 ## 5. Dependencies
 
-- **Consumes:** transfer events (G5).
-- **Produces / answers:** fraud decisions consumed by the transfer saga (G6).
+- **Consumes:** transfer events (G5); KYC check requests from `wallet-service` onboarding (R2); failed-login events from `api-gateway` (R4).
+- **Produces / answers:** fraud decisions consumed by the transfer saga (G6); KYC results consumed by `wallet-service`. KYC topic names and schemas are part of G5.
 - **Contract gate G6:** event back to the saga vs a sync call from transfer. Async fits the outbox design; sync is simpler but couples availability. Decide before P5 coding.
 
 ---
@@ -58,7 +64,6 @@ First increment when the phase starts: module skeleton — `pom.xml`, add to roo
 ## 6. Open decisions (resolve before coding)
 
 - **DynamoDB in P5 vs AWS in P6+ (§10).** Options: DynamoDB Local container in compose (keeps the planned store, AWS SDK used against a local endpoint — needs a §10 exception), or Redis/PostgreSQL only in P5 and DynamoDB in P6. Roadmap conflict #3.
-- Compose block for `fraud-service` says "Phase 6"; the roadmap says P5. Align when the phase starts.
 - `StructuredTaskScope` for the parallel checks: preview in Java 21, needs `--enable-preview` at compile and run time. Justify in an ADR (root `CLAUDE.md` §5).
 - Behaviour when a check times out or Redis is down: fail open (approve) or fail closed (review)? It's a business decision with a technical default.
 

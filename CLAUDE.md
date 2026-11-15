@@ -6,28 +6,30 @@
 
 ## 1. What this project is
 
-CloudPay is a cloud-native digital wallet and money transfer platform built as a portfolio project to demonstrate Senior Backend Engineer competence for EU fintech roles (Wise, Revolut, Zalando, Agoda, Booking, Mollie, Adyen tier).
+CloudPay is a cloud-native digital wallet and money transfer platform built as a portfolio project to demonstrate Senior Backend Engineer competence. Fintech is the domain, but the patterns apply to any backend role.
 
-**The audience for this code is a Senior/Staff interviewer at an EU fintech.** Every architectural choice should hold up to "why did you do it this way" under interview pressure. Cargo-culting is worse than simplicity.
+**Second purpose: resume practice ground.** Ahmed rebuilds here, from scratch and with stub providers, the patterns from his real work that interviewers ask about: rule-based corridor routing, async verification checks over Kafka, provider-agnostic integration layers, login protection, performance tuning, reconciliation. The mapping lives in `local/resume-map.md`, which is local only and never committed. Never copy employer code, names, vendors, endpoints or configuration. Rebuild the idea.
+
+**The audience for this code is a Senior/Staff backend interviewer.** Every architectural choice should hold up to "why did you do it this way" under interview pressure. Cargo-culting is worse than simplicity.
 
 Domain: fintech — wallet management, money transfers, fraud detection, notifications, remittance routing, crypto trading.
 
-Target deployment: AWS EKS (planned, month 4+). Until then, local-only via docker-compose.
+Target deployment: AWS EKS (planned, P6). Until then, local-only via docker-compose.
 
 ---
 
 ## 2. Stack and versions
 
 - **Language:** Java 21 (use virtual threads, records, pattern matching, sealed classes, structured concurrency where it makes the code better — not for show)
-- **Framework:** Spring Boot 4.x (latest stable in the 4.x line)
+- **Framework:** Spring Boot 4.x (latest stable in the 4.x line), except `notification-service`, which uses Quarkus 3.x (see §10)
 - **Build:** Maven (multi-module), Maven Wrapper checked in (`./mvnw`)
 - **JVM target:** 21
 - **Persistence:** PostgreSQL 16 (relational services), MongoDB 7 (document services), DynamoDB (audit/fraud), Redis 7 (caching, rate limiting, quote TTL)
 - **Messaging:** Apache Kafka (Confluent Platform locally)
 - **Migrations:** Liquibase for all PostgreSQL services
 - **Testing:** JUnit 5, AssertJ, Mockito, Testcontainers, Spring Boot Test slices
-- **AI integration:** Spring AI (in services that need it — see §4)
-- **Observability:** Micrometer + OpenTelemetry + Prometheus + Grafana (month 3+)
+- **AI integration:** Spring AI (in services that need it — see §10)
+- **Observability:** Micrometer + OpenTelemetry + Prometheus + Grafana (P7)
 
 ---
 
@@ -44,15 +46,15 @@ The repo is a multi-module Maven project. Only `wallet-service` is being activel
 
 ### Planned (not yet implemented — do not generate cross-service code)
 
-| Service | Target month | Port | Primary DB | Responsibility |
+| Service | Phase | Port | Primary DB | Responsibility |
 |---|---|---|---|---|
-| `api-gateway` | M2 | 8080 | Redis | OAuth2 resource server, JWT validation, rate limiting, routing |
-| `transfer-service` | M2 | 8082 | PostgreSQL | Transfer domain, Saga orchestration, Outbox pattern |
-| `fraud-service` | M3 | 8083 | DynamoDB + Redis | Fraud detection, Kafka consumer, Spring AI anomaly scoring |
-| `notification-service` | M3 | 8084 | MongoDB + DynamoDB | Notifications, audit log, RAG chat, compliance reports |
-| `remittance-service` | M4 | 8085 | PostgreSQL | DB-driven corridor routing, FX rates, provider Strategy |
-| `crypto-service` | M5 | 8086 | MongoDB + Redis | Crypto buy/sell, quote TTL, price streaming via SSE |
-| `profiler-service` | M5 | 8087 | — | Programmatic JFR via `jdk.jfr`, async-profiler FlameGraphs, Spring AI analysis |
+| `api-gateway` | P3 | 8080 | Redis | OAuth2 resource server, JWT validation, rate limiting, routing, login lockout, device binding, step-up auth |
+| `transfer-service` | P4 | 8082 | PostgreSQL | Transfer domain, Saga orchestration, Outbox pattern, reconciliation |
+| `fraud-service` | P5 | 8083 | DynamoDB + Redis | Fraud detection, async KYC checks over Kafka, Spring AI anomaly scoring |
+| `notification-service` | P5 | 8084 | MongoDB + DynamoDB | Quarkus. Notifications, hash-chained audit log, async receipts/statements, RAG chat, compliance reports |
+| `remittance-service` | P9 | 8085 | PostgreSQL | DB-driven corridor rules, provider registry, FX quotes, parallel provider calls |
+| `crypto-service` | P10 | 8086 | MongoDB + Redis | Provider-agnostic asset layer (crypto + digital gold), quote TTL, price streaming via SSE |
+| `profiler-service` | P11-P12 | 8087 | — | Programmatic JFR via `jdk.jfr`, async-profiler FlameGraphs, memory/GC investigations, Spring AI analysis |
 
 ---
 
@@ -198,6 +200,7 @@ These technologies **will be added in their planned phase**. Do not introduce th
 
 - ⏳ Authentication / authorization → P3 via `api-gateway` (OAuth2 server + JWT)
 - ⏳ Kafka producers/consumers → P5 when `transfer-service` needs the Outbox pattern
+- ⏳ Quarkus → P5, `notification-service` only. CDI and SmallRye Reactive Messaging, no Spring compat layer, JVM image (not native). ADR required. Open: how the module escapes the parent pom's Spring Boot dependencies (roadmap conflict #7).
 - ⏳ Resilience4j → P4 when there's a real inter-service call to protect
 - ⏳ AWS SDK / cloud anything → P6+
 - ⏳ Spring AI calls → P11+, starting in `fraud-service`

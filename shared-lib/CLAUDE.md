@@ -53,6 +53,7 @@ Note: the root pom currently adds `spring-boot-starter` to every module, includi
 - `public record Money(BigDecimal amount, Currency currency)`.
 - Compact constructor validates non-null and normalises scale explicitly with `RoundingMode.HALF_EVEN`: 4 for fiat, 8 for crypto. Never trust the incoming scale.
 - `Currency` here means the CloudPay currency notion, which must also cover crypto (BTC, ETH, USDC, SOL) — `java.util.Currency` does not. Decide the type before writing `Money`; ask if unsure.
+- G1 must also cover digital gold (XAU) for `crypto-service` (resume map R5): decide its unit (troy ounce or gram) and scale.
 - Arithmetic (`add`, `subtract`, ...) rejects mismatched currencies. No implicit FX.
 - Comparisons use `compareTo`; `equals`/`hashCode` must be scale-insensitive (record defaults are **not** — override them).
 - Never `double`/`float`. Not even in tests or factory methods.

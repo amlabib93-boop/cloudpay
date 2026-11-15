@@ -27,7 +27,7 @@ First increment when the phase starts: module skeleton — `pom.xml`, add to roo
 | Port | 8086 |
 | Datastores | MongoDB 7 (orders, holdings) + Redis 7 (quotes with TTL, price cache) |
 | Messaging | Kafka for the price stream; SSE to clients |
-| Assets | BTC, ETH, USDC, SOL |
+| Assets | BTC, ETH, USDC, SOL, plus digital gold (XAU) through its own provider (R5) |
 
 ---
 
@@ -38,6 +38,10 @@ First increment when the phase starts: module skeleton — `pom.xml`, add to roo
 - Settlement with `wallet-service`: debit fiat, credit crypto (or the reverse), as a saga with compensation.
 - Price streaming: prices published to Kafka, fanned out to clients over SSE.
 - Crypto amounts: scale 8 minimum, `HALF_EVEN` (root `CLAUDE.md` §4).
+
+### Resume-linked features (see `local/resume-map.md`, local only)
+
+- **R5 provider-agnostic asset layer:** `VirtualAssetProvider` SPI + registry with two stub providers — crypto (BTC, ETH, USDC, SOL) and digital gold (XAU). Same quote / buy / sell flow for both; a new asset class is a new provider, not a new flow.
 
 ---
 

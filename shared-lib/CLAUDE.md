@@ -2,6 +2,17 @@
 
 > Module-level instructions. The root `CLAUDE.md` still applies in full; this file narrows scope for sessions working on `shared-lib`. If the two conflict, the root file wins — surface the conflict.
 
+**Status:** active. **Phase:** P2 (roadmap #1). **Waits on:** nothing. `wallet-service` domain code waits on this.
+
+---
+
+## Starting a session here
+
+1. Read, in order: root `CLAUDE.md` → this file → `docs/ai-workflow.md` → `docs/interview/shared-lib.md` (if it exists) → `briefs/ROADMAP.md` (row #1).
+2. Branch: `feat/shared-<short-name>` off `master` (e.g. `feat/shared-money`).
+3. **First increment is a decision, not code (gate G1):** propose how `Money` represents its currency, since `java.util.Currency` can't represent BTC, ETH, USDC or SOL. Give 2-3 options with trade-offs (scale per currency, JSON serialization, JPA mapping in services later) and a recommendation. Wait for Ahmed's choice.
+4. Then: restate the task in 3-5 lines, split it into increments (one commit each), list the files for the first code increment, wait for "go".
+
 ---
 
 ## 1. Why this module is special

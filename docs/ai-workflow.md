@@ -10,7 +10,7 @@
 - **One session per service**, each in its own git worktree, on its own branch (`feat/<service>-<short-name>`).
 - Each session reads: root `CLAUDE.md` → `<module>/CLAUDE.md` → this file → `docs/interview/<service>.md` (if it exists).
 - A session edits only its own module. Cross-module changes are separate PRs (see the module `CLAUDE.md`).
-- Starter prompts per service: `briefs/session_starters.md`.
+- To start a session: open the service's `<module>/CLAUDE.md` — its "Starting a session here" section is the checklist. Build order and dependencies: `briefs/ROADMAP.md`.
 
 ---
 

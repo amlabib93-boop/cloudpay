@@ -2,6 +2,17 @@
 
 > Module-level instructions. The root `CLAUDE.md` still applies in full; this file narrows scope for sessions working on `wallet-service`. If the two conflict, the root file wins — surface the conflict.
 
+**Status:** active. **Phase:** P2 (roadmap #2, #3). **Waits on:** `shared-lib` `Money` for domain code only — skeleton, Liquibase and context-load test can start now.
+
+---
+
+## Starting a session here
+
+1. Read, in order: root `CLAUDE.md` → this file → `docs/ai-workflow.md` → `docs/interview/wallet-service.md` (if it exists) → `briefs/ROADMAP.md` (rows #2, #3).
+2. Need a brief from the thinking chat. If none was pasted, ask for it. Don't invent scope from this file.
+3. If `Money` is not on `master` yet: don't define a local money type. Plan the increments that don't need it first.
+4. First reply: restate the task in 3-5 lines, split it into increments (one commit each), list the files for the first increment, wait for "go".
+
 ---
 
 ## 1. Scope of a wallet-service session
@@ -65,3 +76,11 @@ After every task: run `./mvnw -pl wallet-service -am verify`, paste the result, 
 ## 6. Branches
 
 Work on `feat/wallet-<short-name>` (e.g. `feat/wallet-domain`). One logical change per PR, squash-merged to `master`.
+
+---
+
+## 7. Dependencies and skill focus
+
+- **Used by:** `api-gateway` (P3), `transfer-service` (P4, contract gate G4), `crypto-service` (P10, G8). Credit/debit must be idempotent before transfer starts (roadmap #3, gate G2).
+- **Educative (P2):** JPA/Hibernate concurrency and locking, Spring Data JPA.
+- **Interview themes:** optimistic vs pessimistic locking, lost updates, what `@Version` actually checks in the SQL, retry on conflict vs 409, CQRS without a separate read store, why `BigDecimal.equals` is a trap, Liquibase rollback strategy.

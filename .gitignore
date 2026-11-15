@@ -16,3 +16,6 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local-only notes and working docs (not published)
+local/

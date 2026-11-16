@@ -29,7 +29,9 @@ Built as a portfolio project demonstrating Senior Backend Engineer competence in
 
 **AI:** Spring AI (fraud scoring, RAG chat, compliance reports, performance analysis)
 
-**Infrastructure:** AWS EKS · Terraform · Argo CD · Helm · GitHub Actions CI/CD
+**Infrastructure:** AWS EKS · ElastiCache · IAM · Secrets Manager · KMS · SNS/SQS · Lambda · Terraform · Argo CD · Helm · GitHub Actions CI/CD
+
+**Security:** branch protection · Dependabot · CodeQL · secret scanning · Trivy · OWASP ZAP
 
 **Observability:** OpenTelemetry · Prometheus · Grafana · Loki · Tempo
 

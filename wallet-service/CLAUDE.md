@@ -54,6 +54,7 @@ Not in this phase: auth/JWT (P3), Kafka/outbox (P5), Resilience4j (P4), Spring A
 - **R16:** the optimistic-lock contention test is the concurrency story.
 - **R7 onboarding (P5, not now):** a wallet starts `PENDING_KYC` and becomes `ACTIVE` on a KYC-approved event from `fraud-service`. Roadmap row #7d.
 - **R14 (P5):** reconciliation needs a ledger row per credit/debit. Agree its shape in G4 before transfer starts.
+- **S1 (P6, not now):** DB credentials from Secrets Manager, IAM role per pod (IRSA), KMS envelope encryption for sensitive KYC fields (G9). Redis cache moves to ElastiCache (S3).
 
 ---
 

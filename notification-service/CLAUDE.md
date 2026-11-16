@@ -45,13 +45,14 @@ First increment when the phase starts: resolve roadmap conflict #7 (parent pom),
 - **R7 async documents:** receipts and monthly statements generated as PDFs from events, off the request path.
 - **R20 external sync:** push completed transfers to a stub external accounting system in near real time from Kafka events, with retries and idempotent delivery.
 - **R18:** this service is the Quarkus one (CDI, SmallRye Reactive Messaging, no Spring compat layer).
+- **S2 delivery fan-out (P6):** publish to SNS, one SQS queue per channel (email, SMS, push), Lambda stub senders with DLQs and retries. Kafka stays the input. Roadmap #8b.
 
 ---
 
 ## 4. Out of scope / premature
 
 - AI features (RAG, compliance report) — P11.
-- SNS / Lambda fallback — AWS, P6+.
+- SNS/SQS + Lambda delivery — AWS, P6 (roadmap #8b).
 - Real email/SMS providers. Use a logging sender behind an interface until there's a reason.
 
 ---

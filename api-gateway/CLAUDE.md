@@ -43,6 +43,7 @@ First increment when the phase starts: module skeleton — `pom.xml`, add to roo
 - **R11 stateless auth:** JWT validation, user id claim → `ownerId`; ADR covers sessions vs JWT, revocation and key rotation.
 - **R17 traffic spikes:** rate limits proven with a spike load test in P7.
 - **R10 strangler fig (P8/P12):** the gateway is the facade that shifts traffic from an old route to an extracted service.
+- **S5 security testing (P8):** OWASP ZAP scan, JWT tampering, IDOR on `ownerId` and rate-limit bypass tests; each finding fixed and logged in `docs/security/`. Roadmap #10b.
 
 ---
 

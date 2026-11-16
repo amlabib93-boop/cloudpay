@@ -24,12 +24,13 @@ Target deployment: AWS EKS (planned, P6). Until then, local-only via docker-comp
 - **Framework:** Spring Boot 4.x (latest stable in the 4.x line), except `notification-service`, which uses Quarkus 3.x (see §10)
 - **Build:** Maven (multi-module), Maven Wrapper checked in (`./mvnw`)
 - **JVM target:** 21
-- **Persistence:** PostgreSQL 16 (relational services), MongoDB 7 (document services), DynamoDB (audit/fraud), Redis 7 (caching, rate limiting, quote TTL)
-- **Messaging:** Apache Kafka (Confluent Platform locally)
+- **Persistence:** PostgreSQL 16 (relational services), MongoDB 7 (document services), DynamoDB (audit/fraud), Redis 7 (caching, rate limiting, quote TTL; ElastiCache on AWS from P6)
+- **Messaging:** Apache Kafka (Confluent Platform locally); SNS/SQS + Lambda only for notification delivery fan-out (P6)
 - **Migrations:** Liquibase for all PostgreSQL services
 - **Testing:** JUnit 5, AssertJ, Mockito, Testcontainers, Spring Boot Test slices
 - **AI integration:** Spring AI (in services that need it — see §10)
 - **Observability:** Micrometer + OpenTelemetry + Prometheus + Grafana (P7)
+- **Security tooling:** GitHub branch protection, Dependabot, CodeQL, secret scanning (P2); Trivy image scans (P6); OWASP ZAP (P8)
 
 ---
 
@@ -202,7 +203,9 @@ These technologies **will be added in their planned phase**. Do not introduce th
 - ⏳ Kafka producers/consumers → P5 when `transfer-service` needs the Outbox pattern
 - ⏳ Quarkus → P5, `notification-service` only. CDI and SmallRye Reactive Messaging, no Spring compat layer, JVM image (not native). ADR required. Open: how the module escapes the parent pom's Spring Boot dependencies (roadmap conflict #7).
 - ⏳ Resilience4j → P4 when there's a real inter-service call to protect
-- ⏳ AWS SDK / cloud anything → P6+
+- ⏳ GitHub Actions CI, branch protection, Dependabot, CodeQL, secret scanning → P2 (roadmap #0b)
+- ⏳ AWS SDK / cloud anything → P6+: EKS, ElastiCache, IAM (IRSA), Secrets Manager, KMS, SNS/SQS, Lambda (roadmap #8, #8a, #8b)
+- ⏳ Security testing and remediation (OWASP ZAP, authz abuse tests) → P8 (roadmap #10b)
 - ⏳ Spring AI calls → P11+, starting in `fraud-service`
 - ⏳ Kubernetes manifests / Helm charts → P6+
 - ⏳ Service mesh, Istio, mTLS → P8

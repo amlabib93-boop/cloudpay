@@ -52,6 +52,7 @@ Dotted edges are P5 event flows between services that already exist by then; the
 | # | Work | Phase | Waits on (must be on `master`) | Contract gate (agree in thinking chat first) |
 |---|---|---|---|---|
 | 0 | Phase 1 leftovers: AWS seed, `v0.1.0-skeleton` tag | P1 | — | — |
+| 0b | GitHub repo controls + security scanning (S4): branch protection on `master`, required checks, CODEOWNERS, GitHub Actions build + test, Dependabot, CodeQL, secret scanning with push protection | P2 | repo on GitHub | — |
 | 1 | `shared-lib`: `Money` | P2 | — | **G1** currency representation (fiat, crypto, gold XAU) |
 | 2 | `wallet-service`: domain, Liquibase, `@Version`, light CQRS | P2 | #1 for domain code (skeleton can start earlier) | — |
 | 3 | `wallet-service`: idempotency keys on credit/debit, Redis cache, query/index tuning with before/after numbers | P2 end | #2 | **G2** idempotency-key semantics (header, TTL, replay response) |
@@ -62,9 +63,12 @@ Dotted edges are P5 event flows between services that already exist by then; the
 | 7b | `notification-service` (Quarkus): consumer, hash-chained audit log, async receipts, external accounting sync | P5 | #6 | — (consumes G5 events) |
 | 7c | `transfer-service`: reconciliation job (transfers vs wallet ledger), daily summary report | P5 | #6 | — |
 | 7d | `wallet-service`: KYC onboarding (wallet starts `PENDING_KYC`, becomes `ACTIVE` on a KYC-approved event) | P5 | #7 (KYC topics live) | — (KYC topics and schemas are part of G5) |
-| 8 | AWS EKS, Terraform, Argo CD, CI/CD | P6 | #2-#7 have Dockerfiles | — |
+| 8 | AWS EKS + ElastiCache (S3), Terraform, Argo CD, CI/CD with image scanning (Trivy) | P6 | #2-#7 have Dockerfiles | — |
+| 8a | AWS IAM + Secrets Manager + KMS (S1): least-privilege IAM roles per service (IRSA), secrets from Secrets Manager (no secrets in env or compose), KMS for encryption at rest and envelope encryption of sensitive wallet/KYC fields | P6 | #8 | **G9** which fields get field-level encryption, key ownership per service |
+| 8b | Lambda + SNS/SQS (S2): `notification-service` publishes to SNS, one SQS queue per delivery channel (email, SMS, push), Lambda stub senders with DLQs. Kafka stays the internal event backbone | P6 | #7b, #8 | ADR: Kafka for domain events vs SNS/SQS for delivery fan-out |
 | 9 | Observability: traces, metrics, SLOs, load tests (spike + soak) with before/after numbers | P7 | #8 | — |
 | 10 | Service mesh: Istio, canary, chaos | P8 | #8, #9 | — |
+| 10b | Security testing + remediation (S5): authz tests (IDOR on `ownerId`, JWT tampering, rate-limit bypass), OWASP ZAP scan against the gateway, fix CodeQL/Dependabot/Trivy findings, log each fix in `docs/security/` | P8 | #0b, #8a | — |
 | 11 | `remittance-service`: provider registry, DB corridor rules, FX quotes, parallel provider calls, quote ranking | P9 | #1, #5 | **G7** FX quote contract and how transfer uses it |
 | 12 | `crypto-service`: asset-provider layer (crypto + gold), buy/sell, quote TTL, price stream | P10 | #1 (crypto scale), #3, #6 | **G8** crypto ↔ wallet settlement (fiat debit + crypto credit, compensation) |
 | 13 | Spring AI: fraud scoring, notification RAG, compliance report, crypto insight | P11 | #7, #7b, #12 | — |
@@ -116,4 +120,4 @@ These are inconsistencies across the docs. Each is also listed in the service fi
 - At the start of each week: find the current row in §2, check its "waits on" column, then open that service's `CLAUDE.md`.
 - When a gate is agreed: link its ADR in the table.
 - When a row is done: mark it `done (YYYY-MM-DD)` in the Work column.
-- Resume-linked items (R1-R21) are tracked in `local/resume-map.md` (local only, not in the repo). Update its Status column when the item lands.
+- Resume-linked items (R1-R21) and target-role skills (S1-S5) are tracked in `local/resume-map.md` (local only, not in the repo). Update its Status column when the item lands.

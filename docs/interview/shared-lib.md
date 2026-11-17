@@ -35,3 +35,21 @@
 **Open questions / to revisit:**
 - A strict factory that rejects too many decimals, if a service needs it.
 - Capping amount size at the API edge (`1E+100000000` is a cheap denial-of-service input).
+
+## Money arithmetic and comparison — 2026-11-17
+**Concepts:**
+- No implicit FX: `add`, `subtract` and `compareTo` throw `CurrencyMismatchException` across currencies.
+- `Comparable` can throw on values it can't order, as the JDK does with `ClassCastException`; a fake order across currencies would hide bugs.
+- `compareTo == 0` exactly when `equals` (same currency, same value), so `Money` is safe in both `HashSet` and `TreeSet`. Plain `BigDecimal` is not.
+- `BigDecimal` can't overflow; the real limit is the database column (`numeric(19,4)`).
+
+**Decision:** Instance methods on `Money`, with all currency checks in one private helper. `CurrencyMismatchException` extends `IllegalArgumentException` and carries `expected()` and `actual()`, so handlers can build structured errors. Rejected: a base `CloudPayException` (no second caller yet), ordering by currency code then amount (meaningless and hides bugs), and adding `multiply`/`divide`/`allocate` before fees or FX need them.
+
+**Interview Q&A:**
+- *Why does `compareTo` throw on mixed currencies?* Comparing BTC with USD needs an FX rate; that must be an explicit, dated step. To sort balances by value, convert to a display currency first.
+- *Static `Money.add(a, b)` or instance methods?* Instance methods read like the domain (`balance.subtract(amount)`) and keep the currency check on the owning object; idiomatic for Java value types.
+- *Does `Money` prevent overdraft?* No, it only computes. The wallet needs `@Version` or a conditional `UPDATE ... WHERE balance >= :amount` so concurrent debits can't both pass on stale data.
+
+**Open questions / to revisit:**
+- `multiply`/`divide`/`allocate` with explicit rounding when fees (P4) or FX (P9) arrive.
+- A base `CloudPayException` once a second shared exception exists.

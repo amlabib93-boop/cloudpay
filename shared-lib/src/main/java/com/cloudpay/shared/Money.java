@@ -12,8 +12,11 @@ import java.util.Objects;
  * rule.
  *
  * <p>{@code equals} and {@code hashCode} compare by numeric value and currency, not by {@link BigDecimal} scale.
+ *
+ * <p>Arithmetic and ordering only work within one currency and throw {@link CurrencyMismatchException} otherwise.
+ * There is no implicit FX.
  */
-public record Money(BigDecimal amount, Currency currency) {
+public record Money(BigDecimal amount, Currency currency) implements Comparable<Money> {
 
     public static final RoundingMode ROUNDING = RoundingMode.HALF_EVEN;
 
@@ -40,6 +43,62 @@ public record Money(BigDecimal amount, Currency currency) {
 
     public static Money zero(Currency currency) {
         return new Money(BigDecimal.ZERO, currency);
+    }
+
+    /** @throws CurrencyMismatchException if {@code other} is in a different currency */
+    public Money add(Money other) {
+        requireSameCurrency(other);
+        return new Money(amount.add(other.amount), currency);
+    }
+
+    /** @throws CurrencyMismatchException if {@code other} is in a different currency */
+    public Money subtract(Money other) {
+        requireSameCurrency(other);
+        return new Money(amount.subtract(other.amount), currency);
+    }
+
+    public Money negate() {
+        return new Money(amount.negate(), currency);
+    }
+
+    public boolean isZero() {
+        return amount.signum() == 0;
+    }
+
+    public boolean isPositive() {
+        return amount.signum() > 0;
+    }
+
+    public boolean isNegative() {
+        return amount.signum() < 0;
+    }
+
+    /** @throws CurrencyMismatchException if {@code other} is in a different currency */
+    public boolean isGreaterThan(Money other) {
+        return compareTo(other) > 0;
+    }
+
+    /** @throws CurrencyMismatchException if {@code other} is in a different currency */
+    public boolean isLessThan(Money other) {
+        return compareTo(other) < 0;
+    }
+
+    /**
+     * Orders by amount within one currency. Consistent with {@link #equals(Object)}.
+     *
+     * @throws CurrencyMismatchException if {@code other} is in a different currency
+     */
+    @Override
+    public int compareTo(Money other) {
+        requireSameCurrency(other);
+        return amount.compareTo(other.amount);
+    }
+
+    private void requireSameCurrency(Money other) {
+        Objects.requireNonNull(other, "other must not be null");
+        if (currency != other.currency) {
+            throw new CurrencyMismatchException(currency, other.currency);
+        }
     }
 
     @Override

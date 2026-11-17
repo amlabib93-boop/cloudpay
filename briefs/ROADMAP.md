@@ -53,7 +53,7 @@ Dotted edges are P5 event flows between services that already exist by then; the
 |---|---|---|---|---|
 | 0 | Phase 1 leftovers: AWS seed, `v0.1.0-skeleton` tag | P1 | — | — |
 | 0b | GitHub repo controls + security scanning (S4): branch protection on `master`, required checks, CODEOWNERS, GitHub Actions build + test, Dependabot, CodeQL, secret scanning with push protection | P2 | repo on GitHub | — |
-| 1 | `shared-lib`: `Money` | P2 | — | **G1** currency representation (fiat, crypto, gold XAU) |
+| 1 | `shared-lib`: `Money` | P2 | — | **G1** currency representation (fiat, crypto, gold XAU): agreed, [ADR 0001](../docs/adr/0001-money-currency-representation.md) |
 | 2 | `wallet-service`: domain, Liquibase, `@Version`, light CQRS | P2 | #1 for domain code (skeleton can start earlier) | — |
 | 3 | `wallet-service`: idempotency keys on credit/debit, Redis cache, query/index tuning with before/after numbers | P2 end | #2 | **G2** idempotency-key semantics (header, TTL, replay response) |
 | 4 | `api-gateway`: routing, JWT validation, rate limiting, login lockout, device binding, step-up auth | P3 | #2 (needs a route target) | **G3** JWT claims, user id → `ownerId`; auth server inside gateway or separate |
@@ -108,7 +108,7 @@ These are inconsistencies across the docs. Each is also listed in the service fi
 | 3 | `fraud-service` needs DynamoDB in P5, but AWS SDK lands P6+ (§10) | fraud | Before P5: DynamoDB Local in compose, or start on Redis only |
 | 4 | `notification-service` needs MongoDB in P5, but the compose comment said P10 | notification | Fixed 2026-11-15 (compose marker moved to P5) |
 | 5 | Phase numbers: CLAUDE.md §3 used months; compose comments used other phase numbers | docs | Fixed 2026-11-15 |
-| 6 | `Money` currency type: `java.util.Currency` can't represent crypto (gold XAU also needed) | shared-lib, crypto | G1 (P2) |
+| 6 | `Money` currency type: `java.util.Currency` can't represent crypto (gold XAU also needed) | shared-lib, crypto | Fixed 2026-11-15 by G1, [ADR 0001](../docs/adr/0001-money-currency-representation.md) |
 | 7 | Root pom forces Spring Boot BOM + `spring-boot-starter` on every module; `notification-service` is Quarkus | notification, root pom | Before P5 skeleton |
 | 8 | RAG chat / compliance reports planned with Spring AI, but `notification-service` is Quarkus | notification | Before P11: Quarkus LangChain4j or move AI to a Spring service |
 | 9 | External accounting sync (R20) sits in `notification-service`, which is about notifying users, not integrating ledgers | notification, transfer | Before P5: keep it there with a reason in the Quarkus ADR, or move it to `transfer-service` next to reconciliation |
